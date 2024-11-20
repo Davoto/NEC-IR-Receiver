@@ -1,4 +1,5 @@
 .pio
 .idea
 
-/lib/
+/lib/CleanRTOS/
+/lib/arduino-esp32/

@@ -10,7 +10,6 @@ extern "C" {
 void app_main(void)
 {
 	// Initialisatie van NVS, nodig voor WIFI functionaliteit
-	// ... maar we maken nu gebruik van zigbee, dus werkt dat niet :-)
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());  // Wis de NVS-partitie en probeer opnieuw
@@ -22,7 +21,6 @@ void app_main(void)
 	for(;;)
 	{
 		loop();
-		//yield();
 		vTaskDelay(1);  // prevent the watchdog timer to kick in for this thread.
 	}
 }
