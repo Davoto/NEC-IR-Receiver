@@ -17,7 +17,6 @@ public:
 		Task(taskName, taskPriority, taskSizeBytes, taskCoreNumber), tsopReceiver(tsopReceiver), necReceiver(necReceiver) {
 			start();
 		};
-
 private:
 	TsopReceiver tsopReceiver;
     NecReceiver necReceiver;

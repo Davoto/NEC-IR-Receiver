@@ -6,6 +6,11 @@
 
 class TsopReceiver: public crt::Task{
 public:
+    TsopReceiver(const char *taskName, unsigned int taskPriority, unsigned int taskSizeBytes, unsigned int taskCoreNumber, const uint8_t& Pin) :
+            Task(taskName, taskPriority, taskSizeBytes, taskCoreNumber), Pin(Pin) {
+        start();
+    };
+
 	bool isSignalPresent(){
 		return Signal;
 	};
@@ -21,12 +26,7 @@ private:
 	};
 	
 	int Pin;
-	bool Signal;
-public:
-	TsopReceiver(const char *taskName, unsigned int taskPriority, unsigned int taskSizeBytes, unsigned int taskCoreNumber, const uint8_t& Pin) : 
-		Task(taskName, taskPriority, taskSizeBytes, taskCoreNumber), Pin(Pin) {
-			start();
-		};
+	bool Signal = false;
 };
 
 #endif
