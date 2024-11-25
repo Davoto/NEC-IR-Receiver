@@ -2,4 +2,6 @@
 .idea
 
 /lib/CleanRTOS/
-/lib/arduino-esp32/
+/components/
+/managed_components/
+dependencies.lock

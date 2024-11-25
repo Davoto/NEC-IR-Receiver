@@ -1,10 +1,10 @@
-#ifndef NECRECEIVER
-#define NECRECEIVER
+#ifndef NEC_RECEIVER_H
+#define NEC_RECEIVER_H
 
 #include "crt_CleanRTOS.h"
-#include "TsopReceiver.hpp"
-#include "MessageToSerial.hpp"
-#include "SignalPauseDetector.hpp"
+#include "TsopReceiver.h"
+#include "MessageToSerial.h"
+#include "SignalPauseDetector.h"
 
 namespace crt{
 class NecReceiver: public Task{
@@ -15,7 +15,7 @@ class NecReceiver: public Task{
     };
 public:
 	NecReceiver(const char *taskName, unsigned int taskPriority, unsigned int taskSizeBytes, unsigned int taskCoreNumber) :
-		Task(taskName, taskPriority, taskSizeBytes, taskCoreNumber) {
+		Task(taskName, taskPriority, taskSizeBytes, taskCoreNumber), signalChannel(this), pauseChannel(this) {
 			start();
 		};
 

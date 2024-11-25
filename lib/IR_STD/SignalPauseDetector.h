@@ -1,9 +1,9 @@
-#ifndef SIGNALPAUSEDETECTOR
-#define SIGNALPAUSEDETECTOR
+#ifndef SIGNAL_PAUSE_DETECTOR_H
+#define SIGNAL_PAUSE_DETECTOR_H
 
 #include <Arduino.h>
-#include "NecReceiver.hpp"
-#include "TsopReceiver.hpp"
+#include "NecReceiver.h"
+#include "TsopReceiver.h"
 #include "crt_CleanRTOS.h"
 
 namespace crt{

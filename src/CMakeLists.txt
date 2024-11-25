@@ -14,8 +14,6 @@ set(COMPONENT_SRCS
 set(COMPONENT_ADD_INCLUDEDIRS
 "../lib/IR_STD"
 "../lib/IR_STD/Example"
-"../lib/arduino-esp32/cores/esp32"
-"../lib/arduino-esp32/variants/esp32"
 "../lib/CleanRTOS/src"
 )
 

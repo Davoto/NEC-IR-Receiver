@@ -1,13 +1,15 @@
 #include <Arduino.h>
-#include "SignalPauseDetector.hpp"
+#include "SignalPauseDetector.h"
+#include "NecReceiver.h"
+#include "TsopReceiver.h"
 
 uint8_t tsopPin = 32;
 
 namespace crt {
-	MainInits mainInits;            // Initialize CleanRTOS.
-	NecReceiver necReceiver("Ruben", 2, 4000, ARDUINO_RUNNING_CORE);
-	TsopReceiver tsopReceiver("Richard", 2, 4000, ARDUINO_RUNNING_CORE, tsopPin);
-	SignalPauseDetector signalPauseDetector("Phillip", 2, 4000, ARDUINO_RUNNING_CORE, tsopReceiver, necReceiver);
+	// MainInits mainInits;            // Initialize CleanRTOS.
+	NecReceiver necReceiver("Ruben", 2, 4000, 1);
+	TsopReceiver tsopReceiver("Richard", 2, 4000, 1, tsopPin);
+	SignalPauseDetector signalPauseDetector("Phillip", 2, 4000, 1, tsopReceiver, necReceiver);
 }
 
 void setup(){
