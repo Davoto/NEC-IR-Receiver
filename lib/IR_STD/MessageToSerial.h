@@ -1,5 +1,5 @@
-#ifndef MESSAGETOSERIAL
-#define MESSAGETOSERIAL
+#ifndef MESSAGE_TO_SERIAL_H
+#define MESSAGE_TO_SERIAL_H
 
 #include <Arduino.h>
 

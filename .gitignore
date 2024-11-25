@@ -2,4 +2,7 @@
 .idea
 
 /lib/CleanRTOS/
-/lib/arduino-esp32/
+/components/
+/managed_components/
+/lib/IR_STD/
+dependencies.lock

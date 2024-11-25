@@ -1,5 +1,5 @@
-#ifndef TSOPRECEIVER
-#define TSOPRECEIVER
+#ifndef TSOP_RECEIVER_H
+#define TSOP_RECEIVER_H
 
 #include <Arduino.h>
 #include "crt_CleanRTOS.h"
