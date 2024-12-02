@@ -3,33 +3,34 @@
 
 #include <Arduino.h>
 #include "NecReceiver.h"
-#include "TsopReceiver.h"
 #include "crt_CleanRTOS.h"
 
-namespace crt{
-class SignalPauseDetector: public Task{
+#define T_MAX_PAUSE_US 6000
+
+#define SPD_TASK_NAME           "SignalPauseDetector"
+#define SPD_TASK_STACK_DEPTH    6000
+#define SPD_TASK_PRIORITY       2
+
+class SignalPauseDetector{
 	enum states{
 		WaitingForPause,
 		WaitingForSignal
 	};
 public:
-	SignalPauseDetector(const char *taskName, unsigned int taskPriority, unsigned int taskSizeBytes, unsigned int taskCoreNumber, TsopReceiver& tsopReceiver, NecReceiver& necReceiver) : 
-		Task(taskName, taskPriority, taskSizeBytes, taskCoreNumber), tsopReceiver(tsopReceiver), necReceiver(necReceiver) {
-			start();
-		};
+	SignalPauseDetector(TsopReceiver& tsopReceiver, NecReceiver& necReceiver) : tsopReceiver(tsopReceiver), necReceiver(necReceiver) {};
+
+    void begin(){
+        xTaskCreate(Static_main, SPD_TASK_NAME, SPD_TASK_STACK_DEPTH, this, SPD_TASK_PRIORITY, NULL);
+    }
 private:
 	TsopReceiver tsopReceiver;
     NecReceiver necReceiver;
-
-    uint32_t T_MAX_PAUSE_US = 6000;
-
 	uint32_t t_signalUs = 0;
-	uint32_t t_pauseUs;	
-	
+	uint32_t t_pauseUs;
 	states state = WaitingForPause;
 	
 	void main(){
-		vTaskDelay(1000);
+		vTaskDelay(1);
 		
 		while(true){
 			switch(state){
@@ -63,7 +64,11 @@ private:
 			};
 		};
 	};
-};
+
+    static void Static_main(void* arg){
+        SignalPauseDetector* runner = (SignalPauseDetector*)arg;
+        runner->main();
+    }
 };
 
 #endif

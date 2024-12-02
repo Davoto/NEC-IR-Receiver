@@ -11,9 +11,9 @@
 #define JSON_SIGNAL_SIZE_TAG    "n_bytes"
 
 // Task Settings
-#define TASK_NAME           "IR_Simple_Remote"
-#define TASK_STACK_DEPTH    6000
-#define TASK_PRIORITY       2
+#define SR_TASK_NAME           "IR_Simple_Remote"
+#define SR_TASK_STACK_DEPTH    6000
+#define SR_TASK_PRIORITY       2
 
 class IR_Simple_Remote{
 public:
@@ -27,7 +27,7 @@ public:
         ButtonSend.begin();
         ButtonUp.begin();
         ButtonDown.begin();
-        xTaskCreate(Static_main, TASK_NAME, TASK_STACK_DEPTH, this, TASK_PRIORITY, NULL);
+        xTaskCreate(Static_main, SR_TASK_NAME, SR_TASK_STACK_DEPTH, this, SR_TASK_PRIORITY, NULL);
     }
 
 private:

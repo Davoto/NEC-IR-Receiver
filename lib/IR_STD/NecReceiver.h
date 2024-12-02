@@ -1,47 +1,62 @@
 #ifndef NEC_RECEIVER_H
 #define NEC_RECEIVER_H
 
-#include "crt_CleanRTOS.h"
+#include "CleanRTOS.h"
 #include "TsopReceiver.h"
 #include "MessageToSerial.h"
 #include "SignalPauseDetector.h"
 
-namespace crt{
-class NecReceiver: public Task{
+#define QUEUE_SIZE 8
+
+#define T_LEADSIGNAL_MIN_US             7000
+#define T_LEADSIGNAL_MAX_US             11000
+#define T_LEADPAUSE_MIN_US              3000
+#define T_LEADPAUSE_MAX_US              6000
+#define T_BITPAUSE_MIN_US               200
+#define T_BITPAUSE_MAX_US               2000
+#define T_BITPAUSE_THRESHOLD_ZERO_ONE   1100
+
+#define NECR_TASK_NAME           "NecReceiver"
+#define NECR_TASK_STACK_DEPTH    6000
+#define NECR_TASK_PRIORITY       2
+
+class NecReceiver{
     enum states{
         WaitingForLeadSignal,
         WaitingForLeadPause,
         WaitingForBitPause
     };
 public:
-	NecReceiver(const char *taskName, unsigned int taskPriority, unsigned int taskSizeBytes, unsigned int taskCoreNumber) :
-		Task(taskName, taskPriority, taskSizeBytes, taskCoreNumber), signalChannel(this), pauseChannel(this) {
-			start();
-		};
+	explicit NecReceiver(TsopReceiver& TsopReceiver) : TsopReceiver(TsopReceiver) {
+        signalChannel = xQueueCreate(QUEUE_SIZE, sizeof(uint32_t));
+        pauseChannel = xQueueCreate(QUEUE_SIZE, sizeof(uint32_t));
+        SignalPauseDetector(TsopReceiver, this);
+    };
+
+    void begin(){
+        SignalPauseDetector.begin();
+        xTaskCreate(Static_main, NECR_TASK_NAME, NECR_TASK_STACK_DEPTH, this, NECR_TASK_PRIORITY, NULL);
+    }
 
 	void signalDetected(uint32_t t_us){
 		if(t_us > T_LEADSIGNAL_MIN_US) {
-            signalChannel.clear();
-            pauseChannel.clear();
-        };
-		signalChannel.write(t_us);
+            ClearQueue(signalChannel);
+            ClearQueue(pauseChannel);
+        }
+        xQueueSend(signalChannel, &t_us, 0);
 	};
 
 	void pauseDetected(uint32_t t_us){
-		pauseChannel.write(t_us);
-	};
+        xQueueSend(pauseChannel, &t_us, 0);
+    };
 private:
-	uint16_t T_LEADSIGNAL_MIN_US = 7000;
-	uint16_t T_LEADSIGNAL_MAX_US = 11000;
-	uint16_t T_LEADPAUSE_MIN_US = 3000;
-	uint16_t T_LEADPAUSE_MAX_US = 6000;
-	uint16_t T_BITPAUSE_MIN_US = 200;
-	uint16_t T_BITPAUSE_MAX_US = 2000;
-	uint16_t T_BITPAUSE_THRESHOLD_ZERO_ONE = 1100;
-
 	states state = WaitingForLeadSignal;
-	Queue<uint32_t, 5> signalChannel;
-	Queue<uint32_t, 5> pauseChannel;
+
+    TsopReceiver TsopReceiver;
+    SignalPauseDetector SignalPauseDetector;
+
+    QueueHandle_t signalChannel;
+    QueueHandle_t pauseChannel;
 	uint32_t t_signalUs{};
 	uint32_t t_pauseUs{};
 
@@ -61,19 +76,26 @@ private:
 		nofBytes = n/8;
 	};
 
+    void ClearQueue(QueueHandle_t Queue){
+        uint32_t dummy;
+        while(uxQueueMessagesWaiting(Queue) > 0){
+            xQueueReceive(Queue, &dummy, portMAX_DELAY);
+        }
+    }
+
 	void main(){
 		vTaskDelay(1000);
 
 		while(true){
 			switch(state){
 				case WaitingForLeadSignal:
-					signalChannel.read(t_signalUs);
+                    xQueueReceive(signalChannel, &t_signalUs, portMAX_DELAY);
 
 					if(t_signalUs > T_LEADSIGNAL_MIN_US && t_signalUs < T_LEADSIGNAL_MAX_US) state = WaitingForLeadPause;
 
 					break;
 				case WaitingForLeadPause:
-					pauseChannel.read(t_pauseUs);
+                    xQueueReceive(pauseChannel, &t_pauseUs, portMAX_DELAY);
 
 					if(t_pauseUs > T_LEADPAUSE_MIN_US && t_pauseUs < T_LEADPAUSE_MAX_US){
 						state = WaitingForBitPause;
@@ -83,7 +105,7 @@ private:
 
 					break;
 				case WaitingForBitPause:
-					pauseChannel.read(t_pauseUs);
+                    xQueueReceive(pauseChannel, &t_pauseUs, portMAX_DELAY);
 
 					if(t_pauseUs > T_BITPAUSE_MIN_US && t_pauseUs < T_BITPAUSE_MAX_US){
 						m <<= 1;
@@ -95,13 +117,17 @@ private:
 						extractMessage(msg, nofBytes, m, n);
 						MessageToSerial::messageReceived(msg, nofBytes);
 						state = WaitingForLeadSignal;
-					};
+					}
 
 					break;
 			}
-		};
+		}
 	};
-};
+
+    static void Static_main(void* arg){
+        NecReceiver* runner = (NecReceiver*)arg;
+        runner->main();
+    }
 };
 
 #endif

@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "Menu-To-Signal.cpp"
+#include "IR-To-Serial.cpp"
 
 extern "C" {
 	void app_main();

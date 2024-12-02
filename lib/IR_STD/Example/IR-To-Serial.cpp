@@ -1,24 +1,23 @@
 #include <Arduino.h>
-#include "SignalPauseDetector.h"
 #include "NecReceiver.h"
 #include "TsopReceiver.h"
 
-uint8_t tsopPin = 32;
+gpio_num_t tsopPin = GPIO_NUM_33;
 
-namespace crt {
-	// MainInits mainInits;            // Initialize CleanRTOS.
-	NecReceiver necReceiver("Ruben", 2, 4000, 1);
-	TsopReceiver tsopReceiver("Richard", 2, 4000, 1, tsopPin);
-	SignalPauseDetector signalPauseDetector("Phillip", 2, 4000, 1, tsopReceiver, necReceiver);
-}
+
+TsopReceiver TsopReceiver(tsopPin);
+NecReceiver NecReceiver(TsopReceiver);
 
 void setup(){
 	Serial.begin(115200);
+    TsopReceiver.begin();
+    NecReceiver.begin();
+
 	ESP_LOGI("checkpoint", "start of main");
 	
 	vTaskDelay(1000);
-};
+}
 
 void loop(){
-	vTaskDelay(1);
-};
+    if(TsopReceiver.isSignalPresent()) Serial.println("Beep...");
+}

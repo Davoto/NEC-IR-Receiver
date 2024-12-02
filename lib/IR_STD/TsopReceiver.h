@@ -2,31 +2,22 @@
 #define TSOP_RECEIVER_H
 
 #include <Arduino.h>
-#include "crt_CleanRTOS.h"
+#include "CleanRTOS.h"
 
-class TsopReceiver: public crt::Task{
+class TsopReceiver{
 public:
-    TsopReceiver(const char *taskName, unsigned int taskPriority, unsigned int taskSizeBytes, unsigned int taskCoreNumber, const uint8_t& Pin) :
-            Task(taskName, taskPriority, taskSizeBytes, taskCoreNumber), Pin(Pin) {
-        start();
-    };
+    explicit TsopReceiver(const gpio_num_t& Pin) : Pin(Pin) {};
+
+    void begin(){
+        gpio_set_direction(Pin, GPIO_MODE_INPUT);
+        gpio_set_pull_mode(Pin, GPIO_PULLUP_ONLY);
+    }
 
 	bool isSignalPresent(){
-		return Signal;
+        return !gpio_get_level(Pin);
 	};
 private:
-	void main(){
-		vTaskDelay(1000);
-		
-		pinMode(Pin, INPUT);
-		while(true){
-			delayMicroseconds(100);
-			Signal = digitalRead(Pin);
-		};
-	};
-	
-	int Pin;
-	bool Signal = false;
+    gpio_num_t Pin;
 };
 
 #endif
