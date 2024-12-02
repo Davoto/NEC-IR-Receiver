@@ -14,6 +14,8 @@ set(COMPONENT_SRCS
 set(COMPONENT_ADD_INCLUDEDIRS
 "../lib/IR_STD"
 "../lib/IR_STD/Example"
+"../lib/IR_Blaster"
+"../lib/IR_Blaster/Example"
 "../lib/CleanRTOS/src"
 )
 

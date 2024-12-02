@@ -1,7 +1,9 @@
 .pio
 .idea
+.vscode
 
 /lib/CleanRTOS/
 /components/
 /managed_components/
+
 dependencies.lock
