@@ -27,7 +27,7 @@ public:
         ledcAttachPin(Pin, PWM_CHANNEL);
     };
 
-    void sendMessage(uint32_t Message, uint8_t Adress = 0x00, uint8_t N_Bytes = 1) {
+    static void sendMessage(uint32_t Message, uint8_t Adress = 0x00, uint8_t N_Bytes = 1) {
         sendStartBit();
         sendByte(Adress);
 
@@ -55,7 +55,7 @@ public:
         sendZeroBit();
     };
 
-    void sendByte(const uint8_t& Message) {
+    static void sendByte(const uint8_t& Message) {
         uint8_t PositiveMsg = Message;
         uint8_t NegativeMsg = ~Message;
 
@@ -78,7 +78,7 @@ public:
         }
     }
 
-    void sendStartBit() {
+    static void sendStartBit() {
         ledcWrite(PWM_CHANNEL, BURST_ON);
         ets_delay_us(START_POSITIVE);
         ledcWrite(PWM_CHANNEL, BURST_OFF);
@@ -88,14 +88,14 @@ public:
 private:
     uint8_t Pin;
 
-    void sendOneBit() {
+    static void sendOneBit() {
         ledcWrite(PWM_CHANNEL, BURST_ON);
         ets_delay_us(ONE_POSITIVE);
         ledcWrite(PWM_CHANNEL, BURST_OFF);
         ets_delay_us(ONE_NEGATIVE);
     };
 
-    void sendZeroBit() {
+    static void sendZeroBit() {
         ledcWrite(PWM_CHANNEL, BURST_ON);
         ets_delay_us(ZERO_POSITIVE);
         ledcWrite(PWM_CHANNEL, BURST_OFF);

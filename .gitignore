@@ -1,5 +1,6 @@
 .pio
 .idea
+.vscode
 
 /lib/CleanRTOS/
 /components/

@@ -1,18 +1,20 @@
 #include "Arduino.h"
 
 #include "IR_Blaster.h"
+#include "IR_Button_Handler.h"
 
+gpio_num_t Button = GPIO_NUM_21;
 IR_Blaster IR_Blaster(33);
-uint8_t SendButton = 21;
+IR_Button_Handler IR_Button_Handler(Button);
 
 void setup(){
     IR_Blaster.begin();
     Serial.begin(115200);
-    pinMode(SendButton, INPUT_PULLDOWN);
 }
 
 void loop(){
-    if(digitalRead(SendButton)) {
+    if(IR_Button_Handler.GetState()) {
+        IR_Button_Handler.ResetButton();
         Serial.println("IR blaster go brr...");
         IR_Blaster.sendMessage(0x45);
     }
