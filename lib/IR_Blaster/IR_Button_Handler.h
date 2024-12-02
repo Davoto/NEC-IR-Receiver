@@ -2,6 +2,8 @@
 #define IR_BUTTON_HANDLER_H
 
 #include "Arduino.h"
+#include "CleanRTOS.h"
+
 
 class IR_Button_Handler{
 public:
@@ -13,7 +15,7 @@ public:
         gpio_set_direction(Button, GPIO_MODE_INPUT);
         gpio_pullup_en(Button);
         gpio_set_intr_type(Button, GPIO_INTR_POSEDGE);
-        gpio_isr_handler_add(Button, Button_Intr_Handler, NULL);
+        gpio_isr_handler_add(Button, Button_Intr_Handler, this);
     }
 
     bool GetState(){
@@ -23,6 +25,7 @@ public:
     void ResetButton(){
         ButtonPressed = false;
     }
+
 private:
     gpio_num_t Button;
     volatile bool ButtonPressed = false;

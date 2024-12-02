@@ -27,40 +27,43 @@ public:
         ButtonSend.begin();
         ButtonUp.begin();
         ButtonDown.begin();
-        xTaskCreate(Static_main, TASK_NAME, TASK_STACK_DEPTH, NULL, TASK_PRIORITY, NULL);
+        xTaskCreate(Static_main, TASK_NAME, TASK_STACK_DEPTH, this, TASK_PRIORITY, NULL);
     }
 
 private:
     gpio_num_t ButtonSendPin, ButtonUpPin, ButtonDownPin;
     cJSON* JsonList;
-    uint32_t Coordinate = 0;
     uint8_t Address;
     IR_Blaster IR_Blaster_;
     IR_Button_Handler ButtonSend = IR_Button_Handler(ButtonSendPin);
     IR_Button_Handler ButtonUp = IR_Button_Handler(ButtonUpPin);
     IR_Button_Handler ButtonDown = IR_Button_Handler(ButtonDownPin);
+    int Coordinate = 0;
+    cJSON* CurrentItem = cJSON_GetArrayItem(JsonList, Coordinate);
 
     void main(){
         while(true){
             if(ButtonSend.GetState()){
                 ButtonSend.ResetButton();
-                uint32_t Message = cJSON_IsNumber(cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(JsonList, Address), JSON_SIGNAl_STRING));
-                uint8_t N_Bytes = cJSON_IsNumber(cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(JsonList, Address), JSON_SIGNAL_SIZE_TAG));
+                uint32_t Message = cJSON_GetObjectItemCaseSensitive(CurrentItem, JSON_SIGNAl_STRING)->valueint;
+                uint8_t N_Bytes = cJSON_GetObjectItemCaseSensitive(CurrentItem, JSON_SIGNAL_SIZE_TAG)->valueint;
                 IR_Blaster_.sendMessage(Message, Address, N_Bytes);
                 Serial.println("Pressed Send, of this signal:");
-                Serial.println(cJSON_Print(JsonList));
+                Serial.println(cJSON_Print(cJSON_GetArrayItem(JsonList, Coordinate)));
             }
             if(ButtonUp.GetState()){
                 ButtonUp.ResetButton();
                 if(Coordinate > 0) Coordinate--;
+                CurrentItem = cJSON_GetArrayItem(JsonList, Coordinate);
                 Serial.println("Pressed Up, now selected:");
-                Serial.println(cJSON_Print(cJSON_GetArrayItem(JsonList, Address)));
+                Serial.println(cJSON_Print(cJSON_GetArrayItem(JsonList, Coordinate)));
             }
             if(ButtonDown.GetState()){
                 ButtonDown.ResetButton();
-                if(Coordinate > (cJSON_GetArraySize(JsonList) - 1)) Coordinate++;
+                if(Coordinate < (cJSON_GetArraySize(JsonList) - 1)) Coordinate++;
+                CurrentItem = cJSON_GetArrayItem(JsonList, Coordinate);
                 Serial.println("Pressed Down, now selected:");
-                Serial.println(cJSON_Print(cJSON_GetArrayItem(JsonList, Address)));
+                Serial.println(cJSON_Print(cJSON_GetArrayItem(JsonList, Coordinate)));
             }
 
             delay(200);
