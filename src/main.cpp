@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "IR-To-Serial.cpp"
+#include "IR-Serial-Test.cpp"
 
 extern "C" {
 	void app_main();

@@ -5,13 +5,13 @@
 gpio_num_t tsopPin = GPIO_NUM_33;
 
 
-TsopReceiver TsopReceiver(tsopPin);
-NecReceiver NecReceiver(TsopReceiver);
+TsopReceiver tsopReceiver(tsopPin);
+NecReceiver necReceiver(tsopReceiver);
 
 void setup(){
 	Serial.begin(115200);
-    TsopReceiver.begin();
-    NecReceiver.begin();
+    tsopReceiver.begin();
+    necReceiver.begin();
 
 	ESP_LOGI("checkpoint", "start of main");
 	
@@ -19,5 +19,4 @@ void setup(){
 }
 
 void loop(){
-    if(TsopReceiver.isSignalPresent()) Serial.println("Beep...");
 }

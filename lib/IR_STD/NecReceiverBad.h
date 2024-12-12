@@ -1,5 +1,5 @@
-#ifndef NEC_RECEIVER_H
-#define NEC_RECEIVER_H
+#ifndef NEC_RECEIVER_BAD_H
+#define NEC_RECEIVER_BAD_H
 
 #include "CleanRTOS.h"
 #include "TsopReceiver.h"
@@ -20,49 +20,35 @@
 #define NECR_TASK_STACK_DEPTH    6000
 #define NECR_TASK_PRIORITY       2
 
-class NecReceiver{
+class NecReceiverBad{
     enum states{
         WaitingForLeadSignal,
         WaitingForLeadPause,
         WaitingForBitPause
     };
 public:
-	explicit NecReceiver(TsopReceiver& TsopReceiver) : TsopReceiver(TsopReceiver) {
-        signalChannel = xQueueCreate(QUEUE_SIZE, sizeof(uint32_t));
-        pauseChannel = xQueueCreate(QUEUE_SIZE, sizeof(uint32_t));
-        SignalPauseDetector(TsopReceiver, this);
-    };
+	explicit NecReceiverBad(TsopReceiver& tsopReceiver)
+      : signalChannel(xQueueCreate(QUEUE_SIZE, sizeof(uint32_t))),
+        pauseChannel(xQueueCreate(QUEUE_SIZE, sizeof(uint32_t))),
+        signalPauseDetector(tsopReceiver, signalChannel, pauseChannel) {};
 
     void begin(){
-        SignalPauseDetector.begin();
         xTaskCreate(Static_main, NECR_TASK_NAME, NECR_TASK_STACK_DEPTH, this, NECR_TASK_PRIORITY, NULL);
     }
-
-	void signalDetected(uint32_t t_us){
-		if(t_us > T_LEADSIGNAL_MIN_US) {
-            ClearQueue(signalChannel);
-            ClearQueue(pauseChannel);
-        }
-        xQueueSend(signalChannel, &t_us, 0);
-	};
-
-	void pauseDetected(uint32_t t_us){
-        xQueueSend(pauseChannel, &t_us, 0);
-    };
 private:
 	states state = WaitingForLeadSignal;
 
-    TsopReceiver TsopReceiver;
-    SignalPauseDetector SignalPauseDetector;
-
     QueueHandle_t signalChannel;
     QueueHandle_t pauseChannel;
-	uint32_t t_signalUs{};
-	uint32_t t_pauseUs{};
 
-	uint32_t n{}, m{};
-	uint64_t msg{};
-	uint8_t nofBytes{};
+    SignalPauseDetector signalPauseDetector;
+
+    uint32_t t_signalUs = 0;
+	uint32_t t_pauseUs = 0;
+
+	uint32_t n = 0, m = 0;
+	uint64_t msg = 0;
+	uint8_t nofBytes = 0;
 
 	static void extractMessage(uint64_t& msg, uint8_t& nofBytes, uint64_t m, unsigned int n){
 		// revert bits:
@@ -76,16 +62,7 @@ private:
 		nofBytes = n/8;
 	};
 
-    void ClearQueue(QueueHandle_t Queue){
-        uint32_t dummy;
-        while(uxQueueMessagesWaiting(Queue) > 0){
-            xQueueReceive(Queue, &dummy, portMAX_DELAY);
-        }
-    }
-
 	void main(){
-		vTaskDelay(1000);
-
 		while(true){
 			switch(state){
 				case WaitingForLeadSignal:
@@ -121,11 +98,11 @@ private:
 
 					break;
 			}
-		}
+        }
 	};
 
     static void Static_main(void* arg){
-        NecReceiver* runner = (NecReceiver*)arg;
+        NecReceiverBad* runner = (NecReceiverBad*)arg;
         runner->main();
     }
 };
