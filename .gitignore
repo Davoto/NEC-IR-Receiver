@@ -5,6 +5,7 @@
 /lib/CleanRTOS/
 /components/
 /managed_components/
+/lib/SSD1283A/
 
 dependencies.lock
 
