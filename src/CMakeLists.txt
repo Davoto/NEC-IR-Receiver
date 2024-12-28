@@ -15,8 +15,8 @@ set(COMPONENT_ADD_INCLUDEDIRS
 "../lib/IR_Blaster"
 "../lib/IR_Blaster/Example"
 "../lib/CleanRTOS/src"
-"../lib/IR_NEC_RECEIVER"
-"../lib/IR_NEC_RECEIVER/Example"
+"../lib/IR_STD"
+"../lib/IR_STD/Example"
 )
 
 register_component()
