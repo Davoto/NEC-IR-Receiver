@@ -6,6 +6,7 @@
 /components/
 /managed_components/
 /lib/SSD1283A/
+/lib/IR_Blaster/
 
 dependencies.lock
 
