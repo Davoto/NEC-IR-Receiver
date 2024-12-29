@@ -1,0 +1,3 @@
+[submodule "lib/CleanRTOS"]
+	path = lib/CleanRTOS
+	url = https://github.com/pikido-edutainment/CleanRTOS.git
