@@ -1,35 +1,49 @@
 #ifndef NEC_RECEIVER_H
 #define NEC_RECEIVER_H
 
-#include "SignalPauseDetector.h"
-
 class NecReceiver{
 public:
     /**
-     * Constructor for NecReceiver-class, initializes the signalChannel-, pauseChannel-Queue and an instance of
-     * SignalPauseDetector.
-     * @param tsopReceiver Pin used by necReceiver for reading out a tsop sensor, tested with a VS1838B.
+     * Constructor for NecReceiver-class, initializes the signalChannel- and pauseChannel-Queue.
      */
-	explicit NecReceiver(uint8_t& tsopReceiver)
+	explicit NecReceiver()
       : signalChannel(xQueueCreate(QUEUE_SIZE, sizeof(uint32_t))),
-        pauseChannel(xQueueCreate(QUEUE_SIZE, sizeof(uint32_t))),
-        signalPauseDetector(tsopReceiver, signalChannel, pauseChannel) {};
+        pauseChannel(xQueueCreate(QUEUE_SIZE, sizeof(uint32_t))) {};
 
     /**
-     * Begin function to start the task of NecReceiver and the required SignalPauseDetector.
+     * Begin function to start the task of NecReceiver.
      */
     void begin(){
-        signalPauseDetector.begin();
         xTaskCreate(Static_main, NECR_TASK_NAME, NECR_TASK_STACK_DEPTH, this, NECR_TASK_PRIORITY, &Task);
     }
 
     /**
-     * Stop function to delete the NecReceiver and SignalPauseDetector tasks.
+     * Stop function to stop the NecReceiver task.
      */
     void stop(){
-        signalPauseDetector.stop();
         vTaskDelete(&Task);
     }
+
+    /**
+ * Function to add to signal queue when signal is above "T_LEADSIGNAL_MIN_US", this also clears both queue's first
+ * to start a new message.
+ * @param t_us Time in microseconds there was a on signal transmitted to "tsopReceiver".
+ */
+    void signalDetected(uint32_t t_us){
+        if(t_us > T_LEADSIGNAL_MIN_US) {
+            clearQueue(signalChannel);
+            clearQueue(pauseChannel);
+            xQueueSend(signalChannel, &t_us, 0);
+        }
+    };
+
+    /**
+     * Function to send how long in microseconds there has been no signal from "tsopReceiver".
+     * @param t_us Time in microseconds.
+     */
+    void pauseDetected(uint32_t t_us){
+        xQueueSend(pauseChannel, &t_us, 0);
+    };
 
     /**
      * Function to get the last received message, number of bytes and timestamp of extraction.
@@ -84,11 +98,6 @@ private:
     QueueHandle_t pauseChannel;
 
     /**
-     * Required class SignalPauseDetector.
-     */
-    SignalPauseDetector signalPauseDetector;
-
-    /**
      * Variables that are used to hold the latest Queue-data.
      */
     uint32_t t_signalUs = 0;
@@ -122,6 +131,17 @@ private:
 		};
 		nofBytes = n/8;
 	};
+
+    /**
+     * Function to clear a queue.
+     * @param Queue Queue to be cleared.
+     */
+    static void clearQueue(QueueHandle_t Queue){
+        uint32_t dummy;
+        while(uxQueueMessagesWaiting(Queue) > 0){
+            xQueueReceive(Queue, &dummy, portMAX_DELAY);
+        }
+    }
 
     /**
      * <b>Function that runs as task. Switches between three states:</b><br><br>
