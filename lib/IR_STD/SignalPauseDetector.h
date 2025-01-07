@@ -2,17 +2,17 @@
 #define SIGNAL_PAUSE_DETECTOR_H
 
 #include <Arduino.h>
+#include "NecReceiver.h"
 
 class SignalPauseDetector{
 public:
     /**
      * Constructor for SignalPauseDetector class.
      * @param tsopReceiver Pin used by necReceiver for reading out a tsop sensor, tested with a VS1838B.
-     * @param signalChannel Queue used by this class to insert the latest signal on time.
-     * @param pauseChannel Queue used by this class to insert the latest signal off time.
+     * @param necReceiver Class to use pauseDetected and signalDetected.
      */
-	SignalPauseDetector(const uint8_t& tsopReceiver, QueueHandle_t& signalChannel, QueueHandle_t& pauseChannel)
-                        : tsopReceiver(tsopReceiver), signalChannel(signalChannel), pauseChannel(pauseChannel) {};
+	SignalPauseDetector(const uint8_t& tsopReceiver, NecReceiver& necReceiver)
+                        : tsopReceiver(tsopReceiver), necReceiver(necReceiver) {};
 
     /**
      * Begin function to setup the tsopReceiver, configure the timer and start the task.
@@ -35,6 +35,7 @@ public:
      */
     void stop(){
         esp_timer_stop(timer);
+        esp_timer_delete(timer);
         vTaskDelete(&Task);
     }
 private:
@@ -49,13 +50,17 @@ private:
     /**
      * Timing settings for NEC-Protocol.
      */
-    const uint16_t T_LEADSIGNAL_MIN_US  = 7000;
     const uint16_t T_MAX_PAUSE_US       = 6000;
 
     /**
      * Pin used to read out tsopReceiver.
      */
     uint8_t tsopReceiver;
+
+    /**
+     * Class required to use pauseDetected and signalDetected.
+     */
+    NecReceiver necReceiver;
 
     /**
      * States used by the task of this class.
@@ -65,12 +70,6 @@ private:
         WaitingForSignal
     };
     states state = WaitingForSignal;
-
-    /**
-     * Queue's used by this class.
-     */
-    QueueHandle_t signalChannel;
-    QueueHandle_t pauseChannel;
 
     /**
      * Configuration used by hardware timer.
@@ -86,38 +85,6 @@ private:
      */
 	uint32_t t_signalUs = 0;
 	uint32_t t_pauseUs = 0;
-
-    /**
-     * Function to add to signal queue when signal is above "T_LEADSIGNAL_MIN_US", this also clears both queue's first
-     * to start a new message.
-     * @param t_us Time in microseconds there was a on signal transmitted to "tsopReceiver".
-     */
-    void signalDetected(uint32_t t_us){
-        if(t_us > T_LEADSIGNAL_MIN_US) {
-            clearQueue(signalChannel);
-            clearQueue(pauseChannel);
-            xQueueSend(signalChannel, &t_us, 0);
-        }
-    };
-
-    /**
-     * Function to send how long in microseconds there has been no signal from "tsopReceiver".
-     * @param t_us Time in microseconds.
-     */
-    void pauseDetected(uint32_t t_us){
-        xQueueSend(pauseChannel, &t_us, 0);
-    };
-
-    /**
-     * Function to clear a queue.
-     * @param Queue Queue to be cleared.
-     */
-    static void clearQueue(QueueHandle_t Queue){
-        uint32_t dummy;
-        while(uxQueueMessagesWaiting(Queue) > 0){
-            xQueueReceive(Queue, &dummy, portMAX_DELAY);
-        }
-    }
 
     /**
      * <b>Function that runs as task. Starts a timer that sets a event-bit every 100 microseconds and then switches
@@ -146,7 +113,7 @@ private:
 						t_signalUs+=100;
 					}else{
                         // Serial.print(t_signalUs); used for debugging.
-						signalDetected(t_signalUs);
+                        necReceiver.signalDetected(t_signalUs);
 						t_pauseUs = 0;
 						state = WaitingForSignal;
 					}
@@ -160,13 +127,13 @@ private:
 						t_pauseUs+=100;
 						
 						if(t_pauseUs > T_MAX_PAUSE_US){
-                            pauseDetected(t_pauseUs);
+                            necReceiver.pauseDetected(t_pauseUs);
 
                             t_signalUs = 0;
                             state = WaitingForPause;
                         }
 					}else{
-						pauseDetected(t_pauseUs);
+						necReceiver.pauseDetected(t_pauseUs);
 						
 						t_signalUs = 0;
 						state = WaitingForPause;
