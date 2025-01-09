@@ -24,7 +24,7 @@ public:
         timer_args.name = SPD_TIMER_NAME;
         timer_args.callback = Timer_ISR;
         timer_args.arg = this;
-        timer_args.dispatch_method = ESP_TIMER_ISR;
+        // timer_args.dispatch_method = ESP_TIMER_ISR;
         esp_timer_create(&timer_args, &timer);
 
         xTaskCreate(Static_main, SPD_TASK_NAME, SPD_TASK_STACK_DEPTH, this, SPD_TASK_PRIORITY, &Task);
@@ -158,12 +158,17 @@ private:
      */
     static void Timer_ISR(void* arg){
         SignalPauseDetector* runner = (SignalPauseDetector*)arg;
-        BaseType_t xHigherPriorityTaskWoken, xResult;
-        xHigherPriorityTaskWoken = pdFALSE;
+//        BaseType_t xHigherPriorityTaskWoken, xResult;
+//        xHigherPriorityTaskWoken = pdFALSE;
+//
+//        xResult = xEventGroupSetBitsFromISR(runner->timerEventGroup, runner->timerBitMask, &xHigherPriorityTaskWoken);
+//
+//        if(xResult == pdPASS) portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        runner->Timer();
+    }
 
-        xResult = xEventGroupSetBitsFromISR(runner->timerEventGroup, runner->timerBitMask, &xHigherPriorityTaskWoken);
-
-        if(xResult == pdPASS) portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    void Timer(){
+        xEventGroupSetBits(timerEventGroup, timerBitMask);
     }
 };
 
