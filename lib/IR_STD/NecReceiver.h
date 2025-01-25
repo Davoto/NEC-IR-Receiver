@@ -65,11 +65,11 @@ public:
         uint64_t msgHolder = data.msg;
         uint8_t nofBytesHolder = data.nofBytes / 2;
         uint64_t newMsg = 0;
-        for (uint8_t i = 0; i < nofBytesHolder; i++) {
-            uint8_t byte = msgHolder >> (i * 16);
-            uint8_t reverseByte = ~msgHolder >> (i * 16 + 8);
+        for (int i = 0; i < nofBytesHolder ; i++) {
+            uint8_t byte = msgHolder >> ((nofBytesHolder - 1 - i) * 16);
+            uint8_t reverseByte = ~msgHolder >> ((nofBytesHolder - 1 - i) * 16 + 8);
             if (byte == reverseByte) {
-                newMsg = (newMsg << i * 8) | byte;
+                newMsg = (newMsg << 8) | byte;
             } else {
                 ESP_LOGE(NECR_TASK_NAME, "Byte: %X reverseByte: %X", byte, reverseByte);
                 ESP_LOGE(NECR_TASK_NAME, "Could not verify message.");
